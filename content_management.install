@@ -1,0 +1,152 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the content_management module.
+ *
+ */
+
+/**
+ * Implements hook_install().
+ */
+function content_management_install() {
+  // Add a new role: content manager.
+  $roles = user_roles();
+  if (!in_array('content manager', $roles)) {
+    $cm_role = new stdClass();
+    $cm_role->name = 'content manager';
+    $cm_role->weight = 3;
+    user_role_save($cm_role);
+  }
+
+  // Which permissions should we grant?
+  $cm_role = user_role_load_by_name('content manager');
+  $admin_role = user_role_load_by_name('administrator');
+  $perms = content_management_permission();
+  if (!$perms) {
+    $perms = array();
+  }
+  foreach (node_type_get_types() as $type) {
+    $perms["manage {$type->type} content"] = 'we only need the keys, so this value is unimportant';
+  }
+  $perms['view the administration theme'] = 'we only need the keys, so this value is unimportant';
+
+  // Grant cm permissions to the content management role by default and to the
+  // admin role if present.
+  user_role_grant_permissions($cm_role->rid, array_keys($perms));
+  if ($admin_role) {
+    user_role_grant_permissions($admin_role->rid, array_keys($perms));
+  }
+
+  // Make sure the weight of this module is > that of views.
+  $views_weight = db_select('system', 's')
+              ->fields('s', array('weight'))
+              ->condition('name', 'views', '=')
+              ->execute()
+              ->fetchField();
+  db_update('system')
+    ->fields(array('weight' => $views_weight + 20))
+    ->condition('name', 'content_management', '=')
+    ->execute();
+}
+
+/**
+ * Implements hook_enable().
+ */
+function content_management_enable() {
+  if (module_exists('menu')) {
+    $cm_menu = array(
+      'menu_name' => 'content-management',
+      'title' => 'Content management',
+      'description' => 'Provides links to the content management views.'
+    );
+    menu_save($cm_menu);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function content_management_uninstall() {
+  // Delete the role: content management.
+  $roles = user_roles();
+  if (in_array('content management', $roles)) {
+    user_role_delete('content management');
+  }
+}
+
+/**
+ * Grant permissions to the content manager role to access the cm views.
+ */
+function content_management_update_7200() {
+  // Grant cm permissions to the content management role by default.
+  $cm_role = user_role_load_by_name('content manager');
+  $perms = content_management_permission();
+  if (is_array($perms)) {
+    user_role_grant_permissions($cm_role->rid, array_keys($perms));
+  }
+  return t('Granted permissions to the content manager role to access the cm views.');
+}
+
+/**
+ * Grant permissions to the administrator role to access the cm views.
+ */
+function content_management_update_7201() {
+  // Grant cm permissions to the content management role by default.
+  $role = user_role_load_by_name('administrator');
+  $perms = content_management_permission();
+  if ($role && is_array($perms)) {
+    user_role_grant_permissions($role->rid, array_keys($perms));
+  }
+  return t('Granted permissions to the administrator role to access the cm views.');
+}
+
+/**
+ * Grant permissions to the cm and administrator roles to edit content and view
+ * the admin theme.
+ */
+function content_management_update_7202() {
+  $cm_role = user_role_load_by_name('content manager');
+  $admin_role = user_role_load_by_name('administrator');
+  $perms = array();
+  foreach (node_type_get_types() as $type) {
+    $perms["create {$type->type} content"] = 'we only need the keys, so this value is unimportant';
+    $perms["edit any {$type->type} content"] = 'we only need the keys, so this value is unimportant';
+    $perms["delete any {$type->type} content"] = 'we only need the keys, so this value is unimportant';
+  }
+  $perms['view the administration theme'] = 'we only need the keys, so this value is unimportant';
+
+  // Grant permissions to the content management role by default and to the
+  // admin role if present.
+  user_role_grant_permissions($cm_role->rid, array_keys($perms));
+  if ($admin_role) {
+    user_role_grant_permissions($admin_role->rid, array_keys($perms));
+  }
+  return t('Granted permissions to the cm and administrator roles to edit content and view the admin theme.');
+}
+
+/**
+ * Add a content management menu. This makes the usage of our content
+ * management block deprecated.
+ */
+function content_management_update_7203() {
+  $cm_menu = array(
+    'menu_name' => 'content-management',
+    'title' => 'Content management',
+    'description' => 'Provides links to the content management views.',
+  );
+  menu_save($cm_menu);
+
+  // Make sure the weight of this module is > that of views.
+  $views_weight = db_select('system', 's')
+              ->fields('s', array('weight'))
+              ->condition('name', 'views', '=')
+              ->execute()
+              ->fetchField();
+  db_update('system')
+    ->fields(array('weight' => $views_weight + 20))
+    ->condition('name', 'content_management', '=')
+    ->execute();
+
+  return t('Added a menu for the content management module, please enable this menu on the block page.');
+}
+

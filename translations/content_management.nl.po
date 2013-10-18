@@ -1,0 +1,130 @@
+# $Id$
+#
+# Dutch translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  content_management.views_default.inc: n/a
+#  content_management.module: n/a
+#  content_management.install: n/a
+#  content_management.info: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2011-10-26 17:19+0200\n"
+"PO-Revision-Date: 2011-10-26 17:20+0100\n"
+"Last-Translator: zilverdistel <zilverdistel@zilverdistel.be>\n"
+"Language-Team: Dutch <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: content_management.views_default.inc:237
+msgid "Defaults"
+msgstr "Standaard"
+
+#: content_management.views_default.inc:239
+msgid "Apply"
+msgstr "Bevestigen"
+
+#: content_management.views_default.inc:240
+msgid "Reset"
+msgstr "Opnieuw instellen"
+
+#: content_management.views_default.inc:241
+msgid "Sort by"
+msgstr "Sorteer volgens"
+
+#: content_management.views_default.inc:242
+msgid "Asc"
+msgstr ""
+
+#: content_management.views_default.inc:243
+msgid "Descending"
+msgstr "Aflopend"
+
+#: content_management.views_default.inc:244
+msgid "Items per page"
+msgstr "Items per pagina"
+
+#: content_management.views_default.inc:245
+msgid "- All -"
+msgstr "- Alle -"
+
+#: content_management.views_default.inc:246
+msgid "Offset"
+msgstr "Offset"
+
+#: content_management.views_default.inc:247
+msgid "Bulk operations"
+msgstr "Bulk operaties"
+
+#: content_management.views_default.inc:248
+msgid "Title"
+msgstr "Titel"
+
+#: content_management.views_default.inc:249
+msgid "New?"
+msgstr "Nieuw?"
+
+#: content_management.views_default.inc:250
+msgid "Published"
+msgstr "Gepubliceerd"
+
+#: content_management.views_default.inc:251
+msgid "Translations"
+msgstr "Vertalingen"
+
+#: content_management.views_default.inc:252
+msgid "Operations"
+msgstr "Operaties"
+
+#: content_management.views_default.inc:253
+msgid "All"
+msgstr "Alle"
+
+#: content_management.views_default.inc:255
+msgid "more"
+msgstr "meer"
+
+#: content_management.module:25;121
+msgid "Manage !type_name content"
+msgstr "!type_name inhoud beheren"
+
+#: content_management.module:26
+msgid "Allows a user access to the content management view for nodes of the !type_name type."
+msgstr ""
+
+#: content_management.module:39
+msgid "Content Management Menu"
+msgstr "Menu Inhoud beheren"
+
+#: content_management.module:55
+msgid "Content management"
+msgstr "Inhoudelijk beheer"
+
+#: content_management.module:149
+msgid "Add !type_name"
+msgstr "!type_name toevoegen"
+
+#: content_management.install:64
+msgid "Granted permissions to the content manager role to access the cm views."
+msgstr ""
+
+#: content_management.install:77
+msgid "Granted permissions to the administrator role to access the cm views."
+msgstr ""
+
+#: content_management.install:99
+msgid "Granted permissions to the cm and administrator roles to edit content and view the admin theme."
+msgstr ""
+
+#: content_management.info:0
+msgid "Content Management"
+msgstr "Inhoudelijk Beheer"
+
+#: content_management.info:0
+msgid "Creates a view per content type for easy content management."
+msgstr "Maakt per inhoudstype een view aan om het inhoudelijk beheer te vereenvoudigen."
+

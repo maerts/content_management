@@ -1,0 +1,8 @@
+name = "Content Management"
+description = "Creates a view per content type for easy content management."
+dependencies[] = variable
+dependencies[] = views
+dependencies[] = views_bulk_operations
+dependencies[] = views_operations_field
+dependencies[] = views_languages_field
+core = 7.x
