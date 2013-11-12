@@ -422,6 +422,9 @@ function content_management_views_default_views() {
             $handler->display->display_options['filters'][$key . '_nid']['expose']['label'] = $val['label'];
             $handler->display->display_options['filters'][$key . '_nid']['expose']['operator'] = $key . '_nid_op';
             $handler->display->display_options['filters'][$key . '_nid']['expose']['identifier'] = $key . '_nid';
+            if (variable_get($node_type->type . '_' . $key . '_cm_exposed_filter_multivalue', 0)) {
+              $handler->display->display_options['filters'][$key . '_nid']['expose']['multiple'] = TRUE;
+            }
             $handler->display->display_options['filters'][$key . '_nid']['expose']['remember_roles'] = array(
               2 => '2',
               1 => 0,
@@ -439,6 +442,9 @@ function content_management_views_default_views() {
             $handler->display->display_options['filters'][$key . '_tid']['expose']['label'] = $val['label'];
             $handler->display->display_options['filters'][$key . '_tid']['expose']['operator'] = $key . '_tid_op';
             $handler->display->display_options['filters'][$key . '_tid']['expose']['identifier'] = $key . '_tid';
+            if (variable_get($node_type->type . '_' . $key . '_cm_exposed_filter_multivalue', 0)) {
+              $handler->display->display_options['filters'][$key . '_nid']['expose']['multiple'] = TRUE;
+            }
             $handler->display->display_options['filters'][$key . '_tid']['expose']['remember_roles'] = array(
               2 => '2',
               1 => 0,

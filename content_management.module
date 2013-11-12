@@ -210,6 +210,14 @@ function content_management_form_field_ui_field_edit_form_alter(&$form, &$form_s
       '#description' => t('Check this box to expose this field as a filter in the content management menu.'),
       '#default_value' => variable_get($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter', 0),
     );
+    if (in_array($field_info['type'], array('taxonomy_term_reference', 'node_reference'))) {
+      $form['extra_columns']['cm_exposed_filter_multivalue'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Enable multivalue select.'),
+        '#description' => t('Check this box to allow multivalue fields for select lists.'),
+        '#default_value' => variable_get($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue', 0),
+      );
+    }
     $extra_handler = TRUE;
   }
   if ($extra_handler) {
@@ -236,6 +244,9 @@ function content_management_add_to_column_submit_handler($form, $form_state) {
   }
   if (isset($form_state['values']['cm_use_as_exposed_filter'])) {
     variable_set($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter', $form_state['values']['cm_use_as_exposed_filter']);
+  }
+  if (isset($form_state['values']['cm_exposed_filter_multivalue'])) {
+    variable_set($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue', $form_state['values']['cm_exposed_filter_multivalue']);
   }
 }
 
