@@ -399,8 +399,8 @@ function content_management_views_default_views() {
             $handler->display->display_options['filters'][$key . '_value']['id'] = $key . '_value';
             $handler->display->display_options['filters'][$key . '_value']['table'] = 'field_data_' . $key;
             $handler->display->display_options['filters'][$key . '_value']['field'] = $key . '_value';
-            $handler->display->display_options['filters']['field_label_key_value']['operator'] = 'contains';
-            $handler->display->display_options['filters']['field_label_key_value']['exposed'] = TRUE;
+            $handler->display->display_options['filters'][$key . '_value']['operator'] = 'contains';
+            $handler->display->display_options['filters'][$key . '_value']['exposed'] = TRUE;
             $handler->display->display_options['filters'][$key . '_value']['expose']['operator_id'] = $key . '_value_op';
             $handler->display->display_options['filters'][$key . '_value']['expose']['label'] = $val['label'];
             $handler->display->display_options['filters'][$key . '_value']['expose']['operator'] = $key . '_value_op';

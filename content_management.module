@@ -195,7 +195,14 @@ function content_management_form_field_ui_field_edit_form_alter(&$form, &$form_s
     );
     $extra_handler = TRUE;
   }
-  if (in_array($field_info['type'], array('text', 'taxonomy_term_reference', 'node_reference', 'text_with_summary', 'text_long'))) {
+  if (in_array($field_info['type'], array(
+    'text',
+    'taxonomy_term_reference',
+    'node_reference',
+    'text_with_summary',
+    'text_long'
+  ))
+  ) {
     if (!$extra_handler) {
       $form['extra_columns'] = array(
         '#type' => 'fieldset',
@@ -234,20 +241,38 @@ function content_management_add_to_column_submit_handler($form, $form_state) {
   $field_name = $build_info['args']['0']['field_name'];
   $field_bundle = $build_info['args']['0']['bundle'];
   if (isset($form_state['values']['add_as_column_in_cm'])) {
-    variable_set($field_bundle . '_' . $field_name . '_add_as_column_in_cm', $form_state['values']['add_as_column_in_cm']);
     if ($form_state['values']['add_as_column_in_cm']) {
-      variable_set($field_bundle . '_' . $field_name . '_add_column_cm_sort', $form_state['values']['add_column_cm_sort']);
+      variable_set($field_bundle . '_' . $field_name . '_add_as_column_in_cm', 1);
+      if ($form_state['values']['add_column_cm_sort']) {
+        variable_set($field_bundle . '_' . $field_name . '_add_column_cm_sort', 1);
+      }
+      else {
+        variable_del($field_bundle . '_' . $field_name . '_add_column_cm_sort');
+      }
     }
     else {
-      variable_set($field_bundle . '_' . $field_name . '_add_column_cm_sort', 0);
+      variable_del($field_bundle . '_' . $field_name . '_add_as_column_in_cm');
+      variable_del($field_bundle . '_' . $field_name . '_add_column_cm_sort');
     }
   }
   if (isset($form_state['values']['cm_use_as_exposed_filter'])) {
-    variable_set($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter', $form_state['values']['cm_use_as_exposed_filter']);
+    if ($form_state['values']['cm_use_as_exposed_filter']) {
+      variable_set($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter', $form_state['values']['cm_use_as_exposed_filter']);
+      if (isset($form_state['values']['cm_exposed_filter_multivalue'])) {
+        if ($form_state['values']['cm_exposed_filter_multivalue']) {
+          variable_set($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue', $form_state['values']['cm_exposed_filter_multivalue']);
+        }
+        else {
+          variable_del($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue');
+        }
+      }
+    }
+    else {
+      variable_del($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter');
+      variable_del($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue');
+    }
   }
-  if (isset($form_state['values']['cm_exposed_filter_multivalue'])) {
-    variable_set($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue', $form_state['values']['cm_exposed_filter_multivalue']);
-  }
+
 }
 
 /**
