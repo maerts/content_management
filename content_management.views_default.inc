@@ -74,7 +74,6 @@ function content_management_views_default_views() {
 
     if ($weight) {
       $columns += array(
-        'weight_value' => 'weight_value',
         'weight' => 'weight',
       );
     }
@@ -316,10 +315,6 @@ function content_management_views_default_views() {
       $handler->display->display_options['fields']['weight']['id'] = 'weight';
       $handler->display->display_options['fields']['weight']['table'] = 'weight_weights';
       $handler->display->display_options['fields']['weight']['field'] = 'weight';
-      /* Field: Weight: Weight value */
-      $handler->display->display_options['fields']['weight_value']['id'] = 'weight_value';
-      $handler->display->display_options['fields']['weight_value']['table'] = 'weight_weights';
-      $handler->display->display_options['fields']['weight_value']['field'] = 'weight';
     }
 
     if ($weight) {
