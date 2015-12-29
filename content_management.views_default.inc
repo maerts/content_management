@@ -21,9 +21,17 @@ function content_management_views_default_views() {
     }
     $weight = FALSE;
     if (module_exists('weight')) {
-      $type_sets = _weight_get_settings($node_type->type);
-      if (isset($type_sets['enabled']) && $type_sets['enabled']) {
-        $weight = TRUE;
+      $info = system_get_info('module', 'weight');
+      $version = explode('-', $info['version']);
+
+      if ($version > 3) {
+        $type_sets = _weight_get_settings($node_type->type);
+        if (isset($type_sets['enabled']) && $type_sets['enabled']) {
+          $weight = TRUE;
+        }
+      }
+      else {
+        drupal_set_message('Due to the extensive rework of the weight module from major version 3, support will be disabled for the newest version', 'status', FALSE);
       }
     }
 
