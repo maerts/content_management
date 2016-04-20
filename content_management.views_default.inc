@@ -23,8 +23,9 @@ function content_management_views_default_views() {
     if (module_exists('weight')) {
       $info = system_get_info('module', 'weight');
       $version = explode('-', $info['version']);
+      $version = end($version);
 
-      if ($version > 3) {
+      if ($version < 3) {
         $type_sets = _weight_get_settings($node_type->type);
         if (isset($type_sets['enabled']) && $type_sets['enabled']) {
           $weight = TRUE;
