@@ -193,6 +193,16 @@ function content_management_form_field_ui_field_edit_form_alter(&$form, &$form_s
       '#description' => t('Check this box to make the column sortable in the content management interface, this only has effect if you check the box above.'),
       '#default_value' => variable_get($field_bundle . '_' . $field_name . '_add_column_cm_sort', 0),
     );
+
+    if ($field_info['type'] == 'weight') {
+      $form['extra_columns']['weight_selector_in_cm'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Add the weight selector column in content management.'),
+        '#description' => t("Check this box to display the weight selector in the content management views.<br />Enabling the weight selector will sort the view on weight (asc)"),
+        '#default_value' => variable_get($field_bundle . '_' . $field_name . '_weight_selector_in_cm', 0),
+      );
+    }
+
     $extra_handler = TRUE;
   }
   if (in_array($field_info['type'], array(
@@ -270,6 +280,14 @@ function content_management_add_to_column_submit_handler($form, $form_state) {
     else {
       variable_del($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter');
       variable_del($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue');
+    }
+  }
+  if (isset($form_state['values']['weight_selector_in_cm'])) {
+    if ($form_state['values']['weight_selector_in_cm']) {
+      variable_set($field_bundle . '_' . $field_name . '_weight_selector_in_cm', 1);
+    }
+    else {
+      variable_del($field_bundle . '_' . $field_name . '_weight_selector_in_cm');
     }
   }
 

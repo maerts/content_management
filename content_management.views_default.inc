@@ -31,9 +31,6 @@ function content_management_views_default_views() {
           $weight = TRUE;
         }
       }
-      else {
-        drupal_set_message('Due to the extensive rework of the weight module from major version 3, support will be disabled for the newest version', 'status', FALSE);
-      }
     }
 
     /*
@@ -313,6 +310,21 @@ function content_management_views_default_views() {
             $handler->display->display_options['fields'][$key]['settings'] = array(
               'trim_length' => '50',
             );
+            break;
+          case 'weight':
+            if (variable_get($node_type->type . '_' . $key . '_weight_selector_in_cm', 0)) {
+              // Add the weight selector field.
+              $weight_key_selector = "{$key}_selector";
+              $handler->display->display_options['fields'][$weight_key_selector]['id'] = $weight_key_selector;
+              $handler->display->display_options['fields'][$weight_key_selector]['table'] = "field_data_$key";
+              $handler->display->display_options['fields'][$weight_key_selector]['field'] = $weight_key_selector;
+
+              // And the required sort handler.
+              $weight_key_value = "{$key}_value";
+              $handler->display->display_options['sorts'][$weight_key_value]['id'] = $weight_key_value;
+              $handler->display->display_options['sorts'][$weight_key_value]['table'] = "field_data_$key";
+              $handler->display->display_options['sorts'][$weight_key_value]['field'] = $weight_key_value;
+            }
             break;
         }
       }
