@@ -1,0 +1,1 @@
+A basic implementation of the content management module to expose all content types in views and a sidebar block. Works best with a administration theme with a sidebar.

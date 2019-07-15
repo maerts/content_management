@@ -1,317 +1,40 @@
 <?php
+
 /**
  * @file
- * Hook implementations for the content_management module.
+ * The content management module.
  */
 
-/**
- * Implements hook_views_api().
- */
-function content_management_views_api() {
-  list($module, $api) = func_get_args();
-  if ($module == "views" && $api == "views_default") {
-    return array("version" => 3.0);
-  }
-}
-
-/**
- * Implements hook_permission().
- */
-function content_management_permission() {
-  $perms = array();
-  foreach (node_type_get_types() as $type) {
-    $type_name = module_exists('i18n_node') ? i18n_node_translate_type($type) : $type->name;
-    $perms["manage {$type->type} content"] = array(
-      'title' => t('Manage !type_name content', array('!type_name' => $type_name)),
-      'description' => t('Allows a user access to the content management view for nodes of the !type_name type.', array('!type_name' => $type_name)),
-    );
-  }
-  return $perms;
-}
-
-/**
- * Implements hook_menu_alter().
- */
-function content_management_menu_alter(&$items) {
-  if (module_exists('menu') && menu_load('content-management')) {
-    foreach (node_type_get_types() as $type) {
-      $path = 'admin/cm/' . $type->type;
-      if (isset($items[$path])) {
-        $items[$path]['title'] = $type->name;
-        $items[$path]['type'] = MENU_NORMAL_ITEM;
-        $items[$path]['menu_name'] = 'content-management';
-        if (module_exists('i18n_node')) {
-          $items[$path]['title callback'] = '_content_management_menu_title';
-          $items[$path]['title arguments'] = array($type->type);
-        }
-      }
-    }
-  }
-}
-
-/**
- * Title callback for hook_menu items.
- *
- * @param string $type The internal name of the content type
- */
-function _content_management_menu_title($type) {
-  $type = node_type_get_type($type);
-  return i18n_node_translate_type($type);
-}
-
-/**
- * Implements hook_views_pre_build().
- */
-function content_management_views_pre_build(&$view) {
-  if (!isset($view->export_module) || $view->export_module != 'content_management') {
-    return;
-  }
-
-  content_management_set_view_title($view);
-}
-
-/**
- * Sets the Views' display title for content management Views, based on the content type filter.
- *
- * You can use this on custom content management views in your own hook_views_pre_build() implementation.
- */
-function content_management_set_view_title(&$view) {
-  if (is_array($view->filter['type']->value)) {
-    $type = reset($view->filter['type']->value);
-  }
-  $type = node_type_get_type($type);
-
-  $type_name = module_exists('i18n_node') ? i18n_node_translate_type($type) : $type->name;
-  $view->display_handler->set_option('title', t('Manage !type_name content', array('!type_name' => $type_name)));
-}
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\views\ViewExecutable;
 
 /**
  * Implements hook_views_pre_render().
  */
-function content_management_views_pre_render(&$view) {
-  if (!isset($view->export_module) || $view->export_module != 'content_management') {
-    return;
-  }
+function content_management_views_pre_render(ViewExecutable $view) {
+  if ($view->id() == 'content_management') {
+    // Attach extra css.
+    $view->element['#attached']['library'][] = 'content_management/style';
 
-  content_management_attach_add_node_link($view);
-}
-
-/**
- * Adds a link pointing to the node add form to content management Views, based on the content type filter.
- *
- * You can use this on custom content management views in your own hook_views_pre_render() implementation.
- */
-function content_management_attach_add_node_link(&$view) {
-  $type = reset($view->filter['type']->value);
-  $type = node_type_get_type($type);
-
-  if (!user_access("manage {$type->type} content")) {
-    return;
-  }
-
-  // Add a link to add a new node of this type.
-  $type_url_str = str_replace('_', '-', $type->type);
-  $node_add_url = "node/add/{$type_url_str}";
-  if ($type->type == 'panel') {
-    $node_add_url .= '/choose-layout';
-  }
-
-  // Only if the current user has access.
-  if (drupal_valid_path($node_add_url)) {
-    $type_name = module_exists('i18n_node') ? i18n_node_translate_type($type) : $type->name;
-    $link_title = t('Add !type_name', array('!type_name' => $type_name));
-    $link_options = array(
-      'attributes' => array('class' => array('add-node')),
-      'query' => drupal_get_destination(),
-    );
-    $view->attachment_before .= l($link_title, $node_add_url, $link_options);
-  }
-}
-
-/**
- * Implements hook_modules_installed().
- *
- * @see content_management_install()
- */
-function content_management_modules_installed($modules) {
-  if (in_array('menu', $modules)) {
-    $cm_menu = array(
-      'menu_name' => 'content-management',
-      'title' => 'Content management',
-      'description' => 'Provides links to the content management views.'
-    );
-    menu_save($cm_menu);
-  }
-}
-
-/**
- * Implements hook_init().
- */
-function content_management_init() {
-
-  global $theme_key;
-  if ((variable_get_value('admin_theme') !== $theme_key) &&
-    arg(0) != "imce" &&
-    variable_get_value('content_management_insert_admin_link') &&
-    drupal_valid_path(variable_get_value('content_management_admin_path'))
-  ) {
-    drupal_add_js(drupal_get_path('module', 'content_management') . '/content_management_admin_link.js', 'file');
-    drupal_add_js(array('content_management' => array('admin_path' => url(variable_get_value('content_management_admin_path')))), 'setting');
-  }
-}
-
-/**
- * Implements hook_form_FORMID_alter().
- */
-function content_management_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
-  // This for allows the site administrator to add fields as a column in the content management view of this content type.
-  $build_info = $form_state['build_info'];
-  $field_name = $build_info['args']['0']['field_name'];
-  $field_type = $build_info['args']['0']['widget']['type'];
-  $field_bundle = $build_info['args']['0']['bundle'];
-  $field_info = field_info_field($field_name);
-  $extra_handler = FALSE;
-  if ($field_info['type'] != 'text_with_summary') {
-
-    $form['extra_columns'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Content manager settings'),
-      '#collapsible' => FALSE,
-      '#collapsed' => FALSE,
-    );
-
-    $form['extra_columns']['add_as_column_in_cm'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Add as column in content management.'),
-      '#description' => t('Check this box to display this field in the content management views.'),
-      '#default_value' => variable_get($field_bundle . '_' . $field_name . '_add_as_column_in_cm', 0),
-    );
-
-    $form['extra_columns']['add_column_cm_sort'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Make the column sortable in the content manager.'),
-      '#description' => t('Check this box to make the column sortable in the content management interface, this only has effect if you check the box above.'),
-      '#default_value' => variable_get($field_bundle . '_' . $field_name . '_add_column_cm_sort', 0),
-    );
-
-    if ($field_info['type'] == 'weight') {
-      $form['extra_columns']['weight_selector_in_cm'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Add the weight selector column in content management.'),
-        '#description' => t("Check this box to display the weight selector in the content management views.<br />Enabling the weight selector will sort the view on weight (asc)"),
-        '#default_value' => variable_get($field_bundle . '_' . $field_name . '_weight_selector_in_cm', 0),
-      );
+    // Build an easy to access content type array with human readable name.
+    $contentTypes = \Drupal::service('entity.manager')
+      ->getStorage('node_type')
+      ->loadMultiple();
+    $cts = [];
+    foreach ($contentTypes as $ct) {
+      $cts[$ct->id()] = $ct->label();
     }
 
-    $extra_handler = TRUE;
-  }
-  if (in_array($field_info['type'], array(
-    'text',
-    'taxonomy_term_reference',
-    'node_reference',
-    'text_with_summary',
-    'text_long'
-  ))
-  ) {
-    if (!$extra_handler) {
-      $form['extra_columns'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Content manager settings'),
-        '#collapsible' => FALSE,
-        '#collapsed' => FALSE,
-      );
-    }
-    $form['extra_columns']['cm_use_as_exposed_filter'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Expose field as filter.'),
-      '#description' => t('Check this box to expose this field as a filter in the content management menu.'),
-      '#default_value' => variable_get($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter', 0),
-    );
-    if (in_array($field_info['type'], array('taxonomy_term_reference', 'node_reference'))) {
-      $form['extra_columns']['cm_exposed_filter_multivalue'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Enable multivalue select.'),
-        '#description' => t('Check this box to allow multivalue fields for select lists.'),
-        '#default_value' => variable_get($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue', 0),
-      );
-    }
-    $extra_handler = TRUE;
-  }
-  if ($extra_handler) {
-    $form['#submit'][] = 'content_management_add_to_column_submit_handler';
-  }
+    // Get the view parameter.
+    $arg = array_shift($view->args);
 
-}
-
-/**
- * Custom submithandler to configure extra columns for content management views.
- */
-function content_management_add_to_column_submit_handler($form, $form_state) {
-  $build_info = $form_state['build_info'];
-  $field_name = $build_info['args']['0']['field_name'];
-  $field_bundle = $build_info['args']['0']['bundle'];
-  if (isset($form_state['values']['add_as_column_in_cm'])) {
-    if ($form_state['values']['add_as_column_in_cm']) {
-      variable_set($field_bundle . '_' . $field_name . '_add_as_column_in_cm', 1);
-      if ($form_state['values']['add_column_cm_sort']) {
-        variable_set($field_bundle . '_' . $field_name . '_add_column_cm_sort', 1);
-      }
-      else {
-        variable_del($field_bundle . '_' . $field_name . '_add_column_cm_sort');
-      }
+    if (is_string($arg) && isset($cts[$arg])) {
+      $view->setTitle(t('Manage @ct content', ['@ct' => t($cts[$arg])]));
     }
     else {
-      variable_del($field_bundle . '_' . $field_name . '_add_as_column_in_cm');
-      variable_del($field_bundle . '_' . $field_name . '_add_column_cm_sort');
+      $view->setTitle(t('Error generating content management.'));
+      $view->empty['area']->options['content']['value'] = t("The content type you tried to reference doesn't exist. Please make sure it exists in the database.");
     }
-  }
-  if (isset($form_state['values']['cm_use_as_exposed_filter'])) {
-    if ($form_state['values']['cm_use_as_exposed_filter']) {
-      variable_set($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter', $form_state['values']['cm_use_as_exposed_filter']);
-      if (isset($form_state['values']['cm_exposed_filter_multivalue'])) {
-        if ($form_state['values']['cm_exposed_filter_multivalue']) {
-          variable_set($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue', $form_state['values']['cm_exposed_filter_multivalue']);
-        }
-        else {
-          variable_del($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue');
-        }
-      }
-    }
-    else {
-      variable_del($field_bundle . '_' . $field_name . '_cm_use_as_exposed_filter');
-      variable_del($field_bundle . '_' . $field_name . '_cm_exposed_filter_multivalue');
-    }
-  }
-  if (isset($form_state['values']['weight_selector_in_cm'])) {
-    if ($form_state['values']['weight_selector_in_cm']) {
-      variable_set($field_bundle . '_' . $field_name . '_weight_selector_in_cm', 1);
-    }
-    else {
-      variable_del($field_bundle . '_' . $field_name . '_weight_selector_in_cm');
-    }
-  }
-
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- */
-function content_management_form_node_type_form_alter(&$form, &$form_state) {
-  // Add extra settings to content type settings form to add extra bulk operations.
-  if (isset($form['type']) && isset($form['#node_type']->type) && variable_get_value('content_management_' . $form['#node_type']->type . '_bulk_operations')) {
-    $form['vbo'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Bulk operations settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#group' => 'additional_settings',
-      '#attributes' => array(
-        'class' => array('i18n-node-type-settings-form'),
-      ),
-      '#description' => t('Choose which bulk operations you wish to enable for this content type.'),
-    );
-
-    variable_type_include('node_type');
-    $form['vbo'] += node_variable_type_subform($form['#node_type']->type, array('content_management_bulk_operations_select'));
   }
 }

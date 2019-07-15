@@ -1,0 +1,6 @@
+content_management.content.action:
+  class: Drupal\content_management\Plugin\Menu\LocalAction\AddNodeLocalAction
+  route_name: node.add
+  title: 'Add content'
+  appears_on:
+    - view.content_management.page_1

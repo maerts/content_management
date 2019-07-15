@@ -1,0 +1,8 @@
+content_management_settings:
+  title: 'Settings'
+  description: 'Administer content management settings'
+content_management_manage:
+  title: 'Manage all'
+  description: 'Warning: This permission may have security implications.'
+permission_callbacks:
+  - Drupal\content_management\ContentManagementPermissions::permissions

@@ -1,0 +1,10 @@
+name: 'Content management'
+type: module
+description: 'The dynamic content management panel'
+package: 'Content Management'
+configure: content_management.admin_settings
+core: 8.x
+dependencies:
+  - node
+  - user
+  - views
