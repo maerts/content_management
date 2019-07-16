@@ -1,0 +1,3 @@
+content_management.content_types:
+  deriver: Drupal\content_management\Plugin\Derivative\ContentMenuLink
+  class: Drupal\content_management\Plugin\Menu\ContentMenuLink
