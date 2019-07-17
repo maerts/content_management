@@ -1,0 +1,9 @@
+services:
+  content_management.route_subscriber:
+    class: Drupal\content_management\Routing\ContentManagementRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  content_management.access_checker:
+    class: Drupal\content_management\Access\ContentManagementAccessCheck
+    tags:
+      - { name: access_check }

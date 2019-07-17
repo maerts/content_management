@@ -30,7 +30,7 @@ class ContentMenuLink extends DeriverBase implements ContainerDeriverInterface {
    * @param string $basePluginId
    *   The plugin base.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entityManager
-   *   The entity maanger.
+   *   The entity manager.
    */
   public function __construct($basePluginId, EntityManagerInterface $entityManager) {
     $this->entityManager = $entityManager;

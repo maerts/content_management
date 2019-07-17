@@ -7,11 +7,19 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Core\Entity\EntityManagerInterface;
 
 /**
  * Defines a dynamic link action.
  */
 class AddNodeLocalAction extends LocalActionDefault {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityManagerInterface
+   */
+  protected $entityManager;
 
   /**
    * The current request.
@@ -36,11 +44,14 @@ class AddNodeLocalAction extends LocalActionDefault {
    *   The route provider..
    * @param \Symfony\Component\HttpFoundation\RequestStack $requeststack
    *   The request stack.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entityManager
+   *   The entity manager.
    */
-  public function __construct(array $configuration, $pluginId, $pluginDefinition, RouteProviderInterface $routeProvider, RequestStack $requeststack) {
+  public function __construct(array $configuration, $pluginId, $pluginDefinition, RouteProviderInterface $routeProvider, RequestStack $requeststack, EntityManagerInterface $entityManager) {
     parent::__construct($configuration, $pluginId, $pluginDefinition, $routeProvider);
 
     $this->request = $requeststack->getCurrentRequest();
+    $this->entityManager = $entityManager;
   }
 
   /**
@@ -52,7 +63,8 @@ class AddNodeLocalAction extends LocalActionDefault {
       $pluginId,
       $pluginDefinition,
       $container->get('router.route_provider'),
-      $container->get('request_stack')
+      $container->get('request_stack'),
+      $container->get('entity.manager')
     );
   }
 
@@ -61,7 +73,7 @@ class AddNodeLocalAction extends LocalActionDefault {
    */
   public function getRouteParameters(RouteMatchInterface $routeMatch) {
     $parts = explode('admin/content/cm/', $this->request->getPathInfo());
-    $contentTypes = \Drupal::service('entity.manager')
+    $contentTypes = $this->entityManager
       ->getStorage('node_type')
       ->loadMultiple();
     if (array_key_exists($parts[1], $contentTypes)) {
