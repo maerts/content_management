@@ -18,14 +18,21 @@ class ContentManagementManageForm extends ConfigFormBase {
    *
    * @var array
    */
-  protected const ALLOWED_TYPES = ['integer', 'string', 'boolean'];
+  protected const ALLOWED_TYPES = [
+    'integer',
+    'string',
+    'boolean',
+    'timestamp',
+    'entity_reference',
+    'string_long',
+  ];
 
   /**
    * The locked fields.
    *
    * @var array
    */
-  protected const LOCKED_FIELDS = ['title'];
+  protected const LOCKED_FIELDS = ['title', 'changed'];
 
   /**
    * The Entity manager.
