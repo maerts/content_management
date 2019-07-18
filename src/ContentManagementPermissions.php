@@ -51,7 +51,7 @@ class ContentManagementPermissions implements ContainerInjectionInterface {
   public function permissions() {
     $permissions = [];
     // Generate permissions for each content type.
-    $contentTypes = \Drupal::service('entity.manager')
+    $contentTypes = $this->entityManager
       ->getStorage('node_type')
       ->loadMultiple();
 

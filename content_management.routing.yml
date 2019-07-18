@@ -1,4 +1,4 @@
-'content_management.admin_settings':
+content_management.admin_settings:
   path: '/admin/config/user-interface/content-management'
   defaults:
     _form: '\Drupal\content_management\Form\ContentManagementManageForm'

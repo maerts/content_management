@@ -5,6 +5,7 @@
  * The content management module.
  */
 
+use Drupal\Core\Database\Database;
 use Drupal\views\ViewExecutable;
 
 /**
@@ -29,10 +30,64 @@ function content_management_views_pre_render(ViewExecutable $view) {
 
     if (is_string($arg) && isset($cts[$arg])) {
       $view->setTitle(t('Manage @ct content', ['@ct' => t($cts[$arg])]));
+
     }
     else {
       $view->setTitle(t('Error generating content management.'));
       $view->empty['area']->options['content']['value'] = t("The content type you tried to reference doesn't exist. Please make sure it exists in the database.");
+    }
+  }
+}
+
+/**
+ * Implements hook_views_pre_view().
+ */
+function content_management_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
+  if ($view->id() == 'content_management') {
+    $con = Database::getConnection();
+    $fields = $con->query("DESCRIBE `node_field_data`")->fetchAll();
+    $nodeFields = [];
+    foreach ($fields as $field) {
+      $nodeFields[] = $field->Field;
+    }
+
+    // Build an easy to access content type array with human readable name.
+    $contentTypes = \Drupal::service('entity.manager')
+      ->getStorage('node_type')
+      ->loadMultiple();
+    $cts = [];
+    foreach ($contentTypes as $ct) {
+      $cts[$ct->id()] = $ct->label();
+    }
+    // Get the view parameter.
+    $arg = array_shift($args);
+
+    $config = \Drupal::config('content_management.admin_settings');
+
+    if (is_string($arg) && isset($cts[$arg])) {
+      if ($contentTypeSettings = $config->get(strtolower($arg))) {
+        $fieldsAdded = FALSE;
+        foreach ($contentTypeSettings as $field => $enabled) {
+          if ($enabled) {
+            $table = 'node_field_data';
+            if (!in_array($field, $nodeFields, TRUE)) {
+              $table = 'node__' . $field;
+            }
+            $view->addHandler($display_id, 'field', $table, $field);
+            $fieldsAdded = TRUE;
+          }
+        }
+
+        // Bit to move changed & operations to the back.
+        if ($fieldsAdded) {
+          $fields = $view->getHandlers('field');
+          $fieldsLast = ['changed', 'operations'];
+          foreach ($fieldsLast as $fieldName) {
+            $view->removeHandler($display_id, 'field', $fieldName);
+            $view->addHandler($display_id, 'field', $fields[$fieldName]['table'], $fields[$fieldName]['field'], $fields[$fieldName], $fieldName);
+          }
+        }
+      }
     }
   }
 }

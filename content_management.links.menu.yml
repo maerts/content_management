@@ -1,3 +1,10 @@
+content_management.admin_settings:
+  title: Content management settings
+  route_name: content_management.admin_settings
+  weight: 5
+  parent: system.admin_config_ui
+  menu_name: admin
+
 content_management.content_types:
   deriver: Drupal\content_management\Plugin\Derivative\ContentMenuLink
   class: Drupal\content_management\Plugin\Menu\ContentMenuLink
