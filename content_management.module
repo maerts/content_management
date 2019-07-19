@@ -6,8 +6,9 @@
  */
 
 use Drupal\Core\Database\Database;
-use Drupal\views\ViewExecutable;
 use Drupal\Core\Form\FormState;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\views\ViewExecutable;
 
 /**
  * Implements hook_views_pre_render().
@@ -31,7 +32,6 @@ function content_management_views_pre_render(ViewExecutable $view) {
 
     if (is_string($arg) && isset($cts[$arg])) {
       $view->setTitle(t('Manage @ct content', ['@ct' => t($cts[$arg])]));
-
     }
     else {
       $view->setTitle(t('Error generating content management.'));
@@ -53,7 +53,7 @@ function content_management_views_pre_view(ViewExecutable $view, $display_id, ar
     }
 
     // Build an easy to access content type array with human readable name.
-    $contentTypes = \Drupal::service('entity.manager')
+    $contentTypes = Drupal::service('entity.manager')
       ->getStorage('node_type')
       ->loadMultiple();
     $cts = [];
@@ -63,7 +63,7 @@ function content_management_views_pre_view(ViewExecutable $view, $display_id, ar
     // Get the view parameter.
     $arg = array_shift($args);
 
-    $config = \Drupal::config('content_management.admin_settings');
+    $config = Drupal::config('content_management.admin_settings');
 
     if (is_string($arg) && isset($cts[$arg])) {
       if ($contentTypeSettings = $config->get(strtolower($arg))) {
@@ -93,10 +93,74 @@ function content_management_views_pre_view(ViewExecutable $view, $display_id, ar
         // Additional filters.
         foreach ($contentTypeSettings['filters'] as $field => $enabled) {
           if ($enabled) {
+            $fieldConfig = FieldConfig::loadByName('node', $arg, $field);
+
             $table = 'node_field_data';
+            $additionalSettings = [];
             if (!in_array($field, $nodeFields, TRUE)) {
               $table = 'node__' . $field;
+              $type = $fieldConfig->getType();
+              switch ($fieldConfig->getType()) {
+                case 'string':
+                  $field .= '_value';
+                  break;
+
+                case 'entity_reference':
+                  $settings = $fieldConfig->getSettings();
+                  switch ($settings['handler']) {
+                    case 'default:taxonomy_term':
+                      $additionalSettings = [
+                        'vid' => array_pop($settings['handler_settings']['target_bundles']),
+                        'limit' => TRUE,
+                        'operator' => 'or',
+                      ];
+                      $type = 'taxonomy_index_tid';
+                      break;
+                  }
+                  $field .= '_target_id';
+                  break;
+              }
             }
+
+            $options = [
+              'relationship' => 'none',
+              'group_type' => 'group',
+              'admin_label' => '',
+              'operator' => 'contains',
+              'value' => '',
+              'group' => 1,
+              'exposed' => TRUE,
+              'expose' => [
+                'operator_id' => $field . '_op',
+                'operator' => $field . '_op',
+                'identifier' => $field,
+                'label' => $fieldConfig->getLabel(),
+                'required' => FALSE,
+                'remember' => FALSE,
+                'multiple' => FALSE,
+                'description' => '',
+                'use_operator' => FALSE,
+                'remember_roles' => [
+                  'authenticated' => 'authenticated',
+                ],
+              ],
+              'is_grouped' => FALSE,
+              'group_info' => [
+                'label' => '',
+                'description' => '',
+                'identifier' => '',
+                'optional' => TRUE,
+                'widget' => 'select',
+                'multiple' => FALSE,
+                'remember' => FALSE,
+                'default_group' => 'All',
+                'default_group_multiple' => [],
+                'group_items' => [],
+              ],
+              'plugin_id' => $type,
+            ];
+
+            $view->addHandler($display_id, 'filter', $table, $field, array_merge($options, $additionalSettings));
           }
         }
       }

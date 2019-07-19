@@ -18,7 +18,7 @@ class ContentManagementManageForm extends ConfigFormBase {
    *
    * @var array
    */
-  protected const ALLOWED_TYPES = [
+  protected const COLUMN_ALLOWED_TYPES = [
     'integer',
     'string',
     'boolean',
@@ -32,7 +32,31 @@ class ContentManagementManageForm extends ConfigFormBase {
    *
    * @var array
    */
-  protected const LOCKED_FIELDS = ['title', 'changed'];
+  protected const COLUMN_LOCKED_FIELDS = [
+    'title',
+    'changed',
+  ];
+
+  /**
+   * The allowed field types.
+   *
+   * @var array
+   */
+  protected const FILTER_ALLOW_TYPES = [
+    'string',
+    'boolean',
+    'entity_reference',
+    'string_long',
+  ];
+
+  /**
+   * The excluded handlers for entity references in filters.
+   *
+   * @var array
+   */
+  protected const GENERAL_EXCLUDE_HANDLERS = [
+    'default:media',
+  ];
 
   /**
    * The Entity manager.
@@ -118,14 +142,17 @@ class ContentManagementManageForm extends ConfigFormBase {
       $settings = is_null($config->get($contentType->id())) ? [] : $config->get($contentType->id());
 
       foreach ($fields as $field) {
-        if (in_array($field->getType(), $this::ALLOWED_TYPES, TRUE) && !in_array($field->getName(), $this::LOCKED_FIELDS, TRUE)) {
+        $fieldSettings = $field->getSettings();
+        if (!in_array($fieldSettings['handler'], $this::GENERAL_EXCLUDE_HANDLERS, TRUE) && in_array($field->getType(), $this::COLUMN_ALLOWED_TYPES, TRUE) && !in_array($field->getName(), $this::COLUMN_LOCKED_FIELDS, TRUE)) {
           $key = $contentType->id() . '_' . $field->getName();
           $form['columns'][$contentType->id()][$key . '_column'] = [
             '#type' => 'checkbox',
             '#title' => $field->getLabel(),
             '#default_value' => $settings['columns'][$field->getName()] ?? 0,
           ];
+        }
 
+        if (!in_array($fieldSettings['handler'], $this::GENERAL_EXCLUDE_HANDLERS, TRUE) && in_array($field->getType(), $this::FILTER_ALLOW_TYPES, TRUE)) {
           $form['filters'][$contentType->id()][$key . '_filter'] = [
             '#type' => 'checkbox',
             '#title' => $field->getLabel(),
