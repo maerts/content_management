@@ -143,7 +143,7 @@ class ContentManagementManageForm extends ConfigFormBase {
 
       foreach ($fields as $field) {
         $fieldSettings = $field->getSettings();
-        if (!in_array($fieldSettings['handler'], $this::GENERAL_EXCLUDE_HANDLERS, TRUE) && in_array($field->getType(), $this::COLUMN_ALLOWED_TYPES, TRUE) && !in_array($field->getName(), $this::COLUMN_LOCKED_FIELDS, TRUE)) {
+        if ((isset($fieldSettings['handler']) && !in_array($fieldSettings['handler'], $this::GENERAL_EXCLUDE_HANDLERS, TRUE)) && in_array($field->getType(), $this::COLUMN_ALLOWED_TYPES, TRUE) && !in_array($field->getName(), $this::COLUMN_LOCKED_FIELDS, TRUE)) {
           $key = $contentType->id() . '_' . $field->getName();
           $form['columns'][$contentType->id()][$key . '_column'] = [
             '#type' => 'checkbox',
@@ -152,7 +152,7 @@ class ContentManagementManageForm extends ConfigFormBase {
           ];
         }
 
-        if (!in_array($fieldSettings['handler'], $this::GENERAL_EXCLUDE_HANDLERS, TRUE) && in_array($field->getType(), $this::FILTER_ALLOW_TYPES, TRUE)) {
+        if ((isset($fieldSettings['handler']) && !in_array($fieldSettings['handler'], $this::GENERAL_EXCLUDE_HANDLERS, TRUE)) && in_array($field->getType(), $this::FILTER_ALLOW_TYPES, TRUE)) {
           $form['filters'][$contentType->id()][$key . '_filter'] = [
             '#type' => 'checkbox',
             '#title' => $field->getLabel(),
