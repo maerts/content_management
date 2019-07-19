@@ -7,6 +7,7 @@
 
 use Drupal\Core\Database\Database;
 use Drupal\views\ViewExecutable;
+use Drupal\Core\Form\FormState;
 
 /**
  * Implements hook_views_pre_render().
@@ -66,8 +67,9 @@ function content_management_views_pre_view(ViewExecutable $view, $display_id, ar
 
     if (is_string($arg) && isset($cts[$arg])) {
       if ($contentTypeSettings = $config->get(strtolower($arg))) {
+        // Additional columns.
         $fieldsAdded = FALSE;
-        foreach ($contentTypeSettings as $field => $enabled) {
+        foreach ($contentTypeSettings['columns'] as $field => $enabled) {
           if ($enabled) {
             $table = 'node_field_data';
             if (!in_array($field, $nodeFields, TRUE)) {
@@ -87,7 +89,39 @@ function content_management_views_pre_view(ViewExecutable $view, $display_id, ar
             $view->addHandler($display_id, 'field', $fields[$fieldName]['table'], $fields[$fieldName]['field'], $fields[$fieldName], $fieldName);
           }
         }
+
+        // Additional filters.
+        foreach ($contentTypeSettings['filters'] as $field => $enabled) {
+          if ($enabled) {
+            $table = 'node_field_data';
+            if (!in_array($field, $nodeFields, TRUE)) {
+              $table = 'node__' . $field;
+            }
+          }
+        }
       }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function content_management_form_alter(&$form, FormState $formState, $formId) {
+  if ($formId === 'views_exposed_form' && $formState->get('view')->id() === 'content_management') {
+    $currentPath = Drupal::service('path.current')->getPath();
+
+    // Build an easy to access content type array with human readable name.
+    $contentTypes = \Drupal::service('entity.manager')
+      ->getStorage('node_type')
+      ->loadMultiple();
+    $cts = [];
+    foreach ($contentTypes as $ct) {
+      $cts[] = $ct->id();
+    }
+    $arg = end(explode('/', $currentPath));
+    if (in_array($arg, $cts, TRUE)) {
+      $form['#action'] = rtrim($form['#action'], 'all') . $arg;
     }
   }
 }

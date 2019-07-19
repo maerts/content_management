@@ -85,8 +85,14 @@ class ContentManagementManageForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('content_management.admin_settings');
 
-    $form['intro'] = [
-      '#markup' => $this->t('This is a configuration form to enable additional fields, if possible, to be display in the content management views.'),
+    $form['columns'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('This is a configuration form to enable additional fields to be displayed in the content management view.'),
+    ];
+
+    $form['filters'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('This is a configuration form to enable additional filters for the content management view.'),
     ];
 
     $contentTypes = $this->entityManager
@@ -94,21 +100,36 @@ class ContentManagementManageForm extends ConfigFormBase {
       ->loadMultiple();
 
     foreach ($contentTypes as $contentType) {
-      $form[$contentType->id()] = [
+      $form['columns'][$contentType->id()] = [
         '#type' => 'details',
         '#title' => $contentType->label(),
         '#collapsible' => TRUE,
         '#collapsed' => FALSE,
       ];
+
+      $form['filters'][$contentType->id()] = [
+        '#type' => 'details',
+        '#title' => $contentType->label(),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+      ];
+
       $fields = $this->entityManager->getFieldDefinitions('node', $contentType->id());
       $settings = is_null($config->get($contentType->id())) ? [] : $config->get($contentType->id());
+
       foreach ($fields as $field) {
         if (in_array($field->getType(), $this::ALLOWED_TYPES, TRUE) && !in_array($field->getName(), $this::LOCKED_FIELDS, TRUE)) {
           $key = $contentType->id() . '_' . $field->getName();
-          $form[$contentType->id()][$key] = [
+          $form['columns'][$contentType->id()][$key . '_column'] = [
             '#type' => 'checkbox',
             '#title' => $field->getLabel(),
-            '#default_value' => isset($settings[$field->getName()]) ? $settings[$field->getName()] : 0,
+            '#default_value' => $settings['columns'][$field->getName()] ?? 0,
+          ];
+
+          $form['filters'][$contentType->id()][$key . '_filter'] = [
+            '#type' => 'checkbox',
+            '#title' => $field->getLabel(),
+            '#default_value' => $settings['filters'][$field->getName()] ?? 0,
           ];
         }
       }
@@ -132,8 +153,13 @@ class ContentManagementManageForm extends ConfigFormBase {
       $fields = $this->entityManager->getFieldDefinitions('node', $contentType->id());
       $store = [];
       foreach ($fields as $field) {
-        if (in_array($field->getType(), $this::ALLOWED_TYPES, TRUE) && !in_array($field->getName(), $this::LOCKED_FIELDS, TRUE) && $form_state->hasValue($contentType->id() . '_' . $field->getName())) {
-          $store[$field->getName()] = $form_state->getvalue($contentType->id() . '_' . $field->getName());
+        if (in_array($field->getType(), $this::ALLOWED_TYPES, TRUE) && !in_array($field->getName(), $this::LOCKED_FIELDS, TRUE)) {
+          if ($form_state->hasValue($contentType->id() . '_' . $field->getName() . '_column')) {
+            $store['columns'][$field->getName()] = $form_state->getvalue($contentType->id() . '_' . $field->getName() . '_column');
+          }
+          if (!in_array($field->getName(), ['status', 'title']) && $form_state->hasValue($contentType->id() . '_' . $field->getName() . '_filter')) {
+            $store['filters'][$field->getName()] = $form_state->getvalue($contentType->id() . '_' . $field->getName() . '_filter');
+          }
         }
       }
       $config->set($contentType->id(), $store);
