@@ -183,7 +183,8 @@ function content_management_form_alter(&$form, FormState $formState, $formId) {
     foreach ($contentTypes as $ct) {
       $cts[] = $ct->id();
     }
-    $arg = end(explode('/', $currentPath));
+    $pathParts = explode('/', $currentPath);
+    $arg = end($pathParts);
     if (in_array($arg, $cts, TRUE)) {
       $form['#action'] = rtrim($form['#action'], 'all') . $arg;
     }

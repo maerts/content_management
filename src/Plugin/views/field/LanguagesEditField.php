@@ -91,14 +91,14 @@ class LanguagesEditField extends FieldPluginBase {
     if ($entity->isTranslatable()) {
       foreach ($this->languageManager->getLanguages() as $code => $lang) {
         $link = Link::fromTextAndUrl($code, Url::fromUri('internal:/node/' . $eid . '/translations/add/' . $langDefault . '/' . $code, ['language' => $lang, 'query' => ['destination' => $currentPath]]))->toRenderable();
-        $link['#attributes'] = ['class' => 'translate'];
+        $link['#attributes'] = ['class' => 'translate', 'title' => $this->t('Create new translation')];
         $mark = 0;
 
         if ($entity->hasTranslation($code)) {
           $tEntity = $entity->getTranslation($code);
           $mark = node_mark($tEntity->id(), $tEntity->getRevisionCreationTime());
           $link = Link::fromTextAndUrl($code, Url::fromUri('internal:/node/' . $eid . '/edit', ['language' => $lang, 'query' => ['destination' => $currentPath]]))->toRenderable();
-          $link['#attributes'] = ['class' => $tEntity->isPublished() ? 'published' : 'unpublished'];
+          $link['#attributes'] = ['class' => $tEntity->isPublished() ? 'published' : 'unpublished', 'title' => $tEntity->isPublished() ? $this->t('Published') : $this->t('unpublished')];
         }
         $value[] = render($link) . $this->markNode($mark);
       }
@@ -107,7 +107,7 @@ class LanguagesEditField extends FieldPluginBase {
       $tEntity = $entity->getTranslation($langDefault);
       $mark = node_mark($tEntity->id(), $tEntity->getRevisionCreationTime());
       $link = Link::fromTextAndUrl($langDefault, Url::fromUri('internal:/node/' . $eid . '/edit', ['language' => $currentLanguage, 'query' => ['destination' => $currentPath]]))->toRenderable();
-      $link['#attributes'] = ['class' => $tEntity->isPublished() ? 'published' : 'unpublished'];
+      $link['#attributes'] = ['class' => $tEntity->isPublished() ? 'published' : 'unpublished', 'title' => $tEntity->isPublished() ? $this->t('Published') : $this->t('unpublished')];
       $value[] = render($link) . $this->markNode($mark);
     }
 
